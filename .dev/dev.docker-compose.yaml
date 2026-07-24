@@ -1,0 +1,9 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: ./dev.Dockerfile
+    environment:
+      "TERM": "xterm-256color"
+    volumes:
+      - ..:/data
