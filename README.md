@@ -6,7 +6,7 @@ terminal UI written in Python (3.3+) – **no curses**.
 The project is an example of building an interactive ZLE widget with  
 only Python’s standard library and raw ANSI escapes.
 
-![screenshot](https://via.placeholder.com/600x300?text=Example+UI+screenshot)
+![demo](https://github.com/Toliak/zsh-favorite-dir/releases/download/readme-assets/Peek.2026-07-25.01-25.gif)
 
 ## Overview
 
