@@ -100,3 +100,16 @@ zle -N zsh_fav_dir_widget
 
 # Bind to keyboard shortcut (e.g., Ctrl+Q)
 bindkey '^Q' zsh_fav_dir_widget
+
+# When do I need a ZLE widget (zle -N)?
+# - Modify the live command line ($BUFFER, $LBUFFER, $RBUFFER)
+# - Cursor awareness ($CURSOR)
+# - Intercept or replace editor actions (Tab, Enter, Ctrl-R, etc.)
+# - Inspect or rewrite text before execution
+# - Integrate with the line editor (history, completion, kill/yank, redisplay)
+
+# When I don't need a widget?
+# - No interaction with the editing buffer
+# - Just launch an external application or shell function
+# - When bindkey -s is sufficient (keeping in mind it literally "types" characters,
+#   so you may need ^U, \n, etc.)
