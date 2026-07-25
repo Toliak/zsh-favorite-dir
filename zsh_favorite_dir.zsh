@@ -56,6 +56,7 @@ fav_dir_add() {
 
 __ZSH_FAV_DIR_SCRIPT_DIR="${0:A:h}"
 
+# NOTE: this function will word even in bash (if set-pwd defined and if __ZSH_FAV_DIR_SCRIPT_DIR will be changed)
 zsh_fav_dir() {
     # 1. Check if python3 command is available
     if ! command -v python3 >/dev/null 2>&1; then
