@@ -23,8 +23,6 @@ fav_dir_add() {
         return 1
     fi
 
-    command mkdir -p /tmp/govno
-
     # Ensure ~/Q exists
     mkdir -p "$q_dir" || {
         echo "Error: cannot create $q_dir" >&2
@@ -58,14 +56,10 @@ fav_dir_add() {
 
 __ZSH_FAV_DIR_SCRIPT_DIR="${0:A:h}"
 
-# Define the widget function
-zsh_fav_dir_widget() {
-    zle -I
-
+zsh_fav_dir() {
     # 1. Check if python3 command is available
     if ! command -v python3 >/dev/null 2>&1; then
         echo -e "\033[31mError: python3 is not installed or not in PATH.\033[0m"
-        # zle redisplay
         return 1
     fi
 
@@ -76,13 +70,18 @@ zsh_fav_dir_widget() {
     exit_code="$?"
 
     if [ "$exit_code" -ne "0" ]; then
-        zle redisplay
-        return
+        return "$exit_code"
     fi
 
-    # 1. Update your directory state silently
     pushd "$target" > /dev/null
     set-pwd 2>/dev/null || true
+}
+
+# Define the widget function
+zsh_fav_dir_widget() {
+    zle -I
+
+    zsh_fav_dir
 
     # 3. Save text to stack and clear current line
     zle push-line
