@@ -78,6 +78,8 @@ Press `Ctrl+Q` (default) to open the overlay.
 - **Enter** – cd into the chosen directory, restore any saved command line
 - **ESC**, **Ctrl+C** or **q** – cancel
 
+Use `fav_dir_add <target path> [description]` command to quickly save the directory into the bookmarks.
+
 ### Search
 
 Press `/` then type to filter entries. Selection jumps to the  
