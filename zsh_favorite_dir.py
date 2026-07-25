@@ -10,9 +10,20 @@ import tty
 
 Q_DIR = os.path.join(os.path.expanduser('~'), "Q")
 
+class DirEntry:
+    def __init__(self, real_path, name, description):
+        self.real_path = real_path
+        self.name = name
+        self.description = description
+    
+    def __repr__(self):
+        return 'DirEntry(real_path={!r}, name={!r}, description={!r})'.format(
+            self.real_path, self.name, self.description
+        )
+
 def get_directories(base_dir):
     """
-    :rtype: List[Tuple[str, str]]
+    :rtype: List[DirEntry]
     """
 
     if not os.path.isdir(base_dir):
@@ -34,12 +45,20 @@ def get_directories(base_dir):
 
     try:
         entries = os.listdir(base_dir)
-        dirs = [
-            [d, descriptions.get(d, "No description")]
-            for d in entries
-            if os.path.isdir(os.path.join(base_dir, d)) and not d.startswith(".")
-        ]
-        return sorted(dirs, key=lambda x: x[0].lower())
+        dirs = []
+        for d in entries:
+            d_path = os.path.join(base_dir, d)
+            if not os.path.isdir(d_path) or d.startswith("."):
+                continue
+            
+            san_name = ascii(d)[1:-1]
+            san_descr = ascii(descriptions.get(san_name, "No description"))[1:-1]
+            dirs.append(DirEntry(
+                real_path=os.path.realpath(d_path),
+                name=san_name,
+                description=san_descr,
+            ))
+        return sorted(dirs, key=lambda x: x.name.lower())
     except PermissionError:
         return []
 
@@ -77,7 +96,7 @@ class UI:
         """
         :param tty_in: Input terminal interface
         :param tty_out: Output terminal interface
-        :type dirs: List[Tuple[str, str]]
+        :type dirs: List[DirEntry]
         """
         self.tty_in = tty_in
         self.tty_out = tty_out
@@ -121,13 +140,13 @@ class UI:
 
         # Priority 1: Directory name STARTS WITH the query
         for idx, d in enumerate(self.dirs):
-            if d[0].lower().startswith(q):
+            if d.name.lower().startswith(q):
                 self.selected = idx
                 return
 
         # Priority 2: Fallback to substring match in directory name or description
         for idx, d in enumerate(self.dirs):
-            if q in d[0].lower() or q in d[1].lower():
+            if q in d.name.lower() or q in d.description.lower():
                 self.selected = idx
                 return
 
@@ -193,9 +212,9 @@ class UI:
 
             # Format item row
             if item_idx == selected:
-                out.append("\r\x1b[K%s\033[7m > %s  \033[2m%s\033[0m\r" % (sb_prefix, d[0], d[1]))
+                out.append("\r\x1b[K%s\033[7m > %s  \033[2m%s\033[0m\r" % (sb_prefix, d.name, d.description))
             else:
-                out.append("\r\x1b[K%s   %s  \033[2m%s\033[0m\r" % (sb_prefix, d[0], d[1]))
+                out.append("\r\x1b[K%s   %s  \033[2m%s\033[0m\r" % (sb_prefix, d.name, d.description))
 
         return out, visible_count
     
@@ -248,8 +267,7 @@ class UI:
             # WARN: minus one because last line is without \n
             self.clear(lines_rendered-1)
             # Print path to stdout for Zsh cd command
-            full_path = os.path.join(Q_DIR, self.dirs[self.selected][0])
-            print(os.path.realpath(full_path))
+            print(self.dirs[self.selected].real_path)
             return 'exit-0'
 
         # 3. ESC key - clear search query first, or exit app
