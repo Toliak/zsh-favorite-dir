@@ -176,10 +176,10 @@ class UI:
 
         # Calculate scrollbar thumb size and position
         if needs_scrollbar:
-            thumb_size = max(1, int(round(visible_count * visible_count / total_items)))
+            thumb_size = max(1, round(visible_count * visible_count / total_items))
             max_top = total_items - visible_count
             max_thumb_top = visible_count - thumb_size
-            thumb_top = int(round((top_index / max_top) * max_thumb_top)) if max_top > 0 else 0
+            thumb_top = round((top_index / max_top) * max_thumb_top) if max_top > 0 else 0
         else:
             thumb_size = 0
             thumb_top = 0
@@ -188,13 +188,13 @@ class UI:
         # \x1b and \033 are the same (27 in DEC). \x1b used for the control sequences and \033 for the visual things.
         out = []
         # Display query in header if active
-        header_prefix = "Select directory in %s (%d/%d) " % (Q_DIR, self.selected + 1, total_items)
+        header_prefix = "Select directory in {} ({}/{}) ".format(Q_DIR, self.selected + 1, total_items)
         if self.search_mode or self.filter_query:
-            header = header_prefix + "\033[1;34m[Search: \033[0m%s\033[1;34m]:\033[0m" % (self.filter_query, )
+            header = header_prefix + "\033[1;34m[Search: \033[0m{}\033[1;34m]:\033[0m".format(self.filter_query)
         else:
             header = header_prefix + "\033[1;34m[/, ↑/↓, Enter, ESC]:\033[0m"
 
-        out.append("\r\x1b[K\033[1;34m%s\033[0m\r" % (header,))    # \x1b[K removes from cursor to EOL
+        out.append("\r\x1b[K\033[1;34m{}\033[0m\r".format(header))    # \x1b[K removes from cursor to EOL
 
         for row_i in range(visible_count):
             item_idx = top_index + row_i
@@ -212,9 +212,9 @@ class UI:
 
             # Format item row
             if item_idx == selected:
-                out.append("\r\x1b[K%s\033[7m > %s  \033[2m%s\033[0m\r" % (sb_prefix, d.name, d.description))
+                out.append("\r\x1b[K{}{} > {}  {}{}\033[0m\r".format(sb_prefix, "\033[7m", d.name, "\033[2m", d.description))
             else:
-                out.append("\r\x1b[K%s   %s  \033[2m%s\033[0m\r" % (sb_prefix, d.name, d.description))
+                out.append("\r\x1b[K{}   {}  {}{}\033[0m\r".format(sb_prefix, d.name, "\033[2m", d.description))
 
         return out, visible_count
     
@@ -246,7 +246,7 @@ class UI:
             self.top_index = self.selected - visible_count + 1
 
     def clear(self, lines_rendered):
-        self.tty_out.write("\x1b[%dA\x1b[J" % (lines_rendered,))
+        self.tty_out.write("\x1b[{}A\x1b[J".format(lines_rendered))
         self.tty_out.flush()
 
     def process_key(self, visible_count, lines_rendered):
@@ -317,25 +317,11 @@ class UI:
             return r
 
         # Move cursor back up to top line for redraw
-        self.tty_out.write("\x1b[%dA" % (lines_rendered-1,))
+        self.tty_out.write("\x1b[{}A".format(lines_rendered-1))
         self.tty_out.flush()
         return 'continue'
 
-def main():
-    dirs = get_directories(Q_DIR)
-    if not dirs:
-        # Skip two lines (for p10k-like themes) and one line for the line itself
-        sys.stderr.write("\033[31mNo directories found in %s\033[0m\n\n\n" % (Q_DIR,))
-        sys.exit(2)
-
-    # Explicitly open /dev/tty for interactive input and rendering
-    try:
-        tty_out = open("/dev/tty", "w")
-        tty_in = open("/dev/tty", "rb", buffering=0)
-    except OSError as e:
-        sys.stderr.write("\033[31mCannot open /dev/tty: %s\033[0m\n\n\n" % (str(e),))
-        sys.exit(2)
-
+def main_inner(tty_in, tty_out, dirs):
     ui = UI(tty_in, tty_out, dirs)
     ui.hide_cursor()
 
@@ -357,7 +343,25 @@ def main():
         tty_out.flush()
         tty_out.close()
         tty_in.close()
+    
 
+def main():
+    dirs = get_directories(Q_DIR)
+    if not dirs:
+        # Skip two lines (for p10k-like themes) and one line for the line itself
+        sys.stderr.write("\033[31mNo directories found in {}\033[0m\n\n\n".format(Q_DIR))
+        sys.exit(2)
+
+    # Explicitly open /dev/tty for interactive input and rendering
+    try:
+        with \
+            open("/dev/tty", "w") as tty_out, \
+            open("/dev/tty", "rb", buffering=0) as tty_in \
+        :
+            return main_inner(tty_in, tty_out, dirs)
+    except OSError as e:
+        sys.stderr.write("\033[31mCannot open /dev/tty: {!s}\033[0m\n\n\n".format(e))
+        sys.exit(2)
 
 if __name__ == "__main__":
     main()
