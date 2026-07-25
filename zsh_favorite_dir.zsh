@@ -90,6 +90,9 @@ zsh_fav_dir_widget() {
     # 4. Trigger a fake "Enter" on the empty line to drop down 
     # to a new prompt. Zsh will instantly auto-pop your text back.
     zle accept-line
+
+    # WARN: we cannot do just `zle reset-prompt` here, because some 
+    # themes like p10k does not redraw current path
 }
 
 # Register it with ZLE (Zsh Line Editor)
